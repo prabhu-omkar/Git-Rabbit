@@ -5,8 +5,16 @@
   "version": "1.0.0",
   "description": "Auto-sync competitive programming solutions to GitHub",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab"
   ],
+  "host_permissions": [
+    "https://api.github.com/*"
+  ],
+  "background": {
+    "service_worker": "background/service_worker.js",
+    "type": "module"
+  },
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
