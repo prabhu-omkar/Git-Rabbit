@@ -53,3 +53,53 @@ document.addEventListener('DOMContentLoaded', () => {
   togglePat.addEventListener('click', () => {
     const show = patInput.type === 'password';
     patInput.type = show ? 'text' : 'password';
+    eyeOpen.classList.toggle('hide', show);
+    eyeClosed.classList.toggle('hide', !show);
+  });
+
+  guideToggle.addEventListener('click', () => {
+    guidePanel.classList.toggle('open');
+  });
+
+  chrome.storage.local.get(['githubPat', 'githubRepo', 'targetBranch', 'isConnected'], s => {
+    if (s.githubPat)    patInput.value = s.githubPat;
+    if (s.githubRepo)   repoInput.value = s.githubRepo;
+    if (s.targetBranch) branchInput.value = s.targetBranch;
+    if (s.isConnected)  setStatus('ok', `[CONNECTED] ${s.githubRepo}`);
+    checkInputs();
+  });
+
+  testBtn.addEventListener('click', async () => {
+    hideAlert();
+    const ri = parseRepo(repoInput.value);
+    if (!patInput.value.trim() || !ri) return;
+
+    setBusy(testBtn, $('testBtnLabel'), 'TESTING...', 'TEST', true);
+
+    try {
+      const res = await chrome.runtime.sendMessage({
+        action: 'TEST_CONNECTION',
+        pat: patInput.value.trim(),
+        owner: ri.owner,
+        repo: ri.repo
+      });
+      if (res.success) {
+        showAlert(`OK: ${ri.owner}/${ri.repo} [${res.defaultBranch}]`, 'ok');
+        setStatus('ok', `[VERIFIED] ${ri.owner}/${ri.repo}`);
+      } else {
+        showAlert(`ERR: ${res.error}`, 'err');
+        setStatus('err', 'ERR_AUTH');
+      }
+    } catch (e) {
+      showAlert(`ERR: ${e.message}`, 'err');
+    } finally {
+      setBusy(testBtn, $('testBtnLabel'), 'TESTING...', 'TEST', false);
+    }
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    hideAlert();
+    const ri = parseRepo(repoInput.value);
+    if (!patInput.value.trim() || !ri) return;
+
