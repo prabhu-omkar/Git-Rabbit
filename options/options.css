@@ -113,3 +113,118 @@ body {
   margin: 1.25rem 0;
   width: 100%;
 }
+
+
+/* ── Form Fields ──────────────────────────────────────────── */
+.field { margin-bottom: 1.25rem; }
+.field--row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; }
+
+.field__lbl {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+.field__lbl svg { width: 14px; height: 14px; }
+.dim { opacity: 0.5; }
+
+.field__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transition: 0.2s;
+}
+.field__input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-dim);
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+}
+.input::placeholder { color: #333; }
+
+/* Blinking cursor effect for focus */
+.cursor {
+  position: absolute;
+  left: 0.75rem;
+  width: 8px;
+  height: 14px;
+  background: var(--accent);
+  pointer-events: none;
+  opacity: 0;
+}
+.input:focus + .cursor,
+.input:not(:placeholder-shown) + .cursor {
+  display: none;
+}
+.field__input-wrap:focus-within .input:placeholder-shown + .cursor {
+  display: block;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  padding: 0 0.75rem;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.btn-icon svg { width: 14px; height: 14px; }
+.btn-icon:hover { color: var(--text); }
+.hide { display: none !important; }
+
+/* ── Accordion (Terminal style block) ─────────────────────── */
+.accordion {
+  margin-top: 0.5rem;
+}
+.accordion__toggle {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.accordion__toggle:hover { opacity: 1; }
+.accordion__toggle svg { width: 12px; height: 12px; }
+
+.accordion__content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s var(--ease);
+}
+.accordion__content.open {
+  max-height: 100px;
+}
+.code-block {
+  margin-top: 0.5rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.code-block a {
+  color: var(--accent);
+  text-decoration: none;
