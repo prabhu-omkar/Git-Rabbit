@@ -53,3 +53,48 @@ export class GitHubApiClient {
     try {
       await this._req(`/contents/${path}?ref=${branch}`);
       return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // ─── List directories at a path ───────────────────────────────
+
+  async getDirectoryListing(branch, path = '') {
+    try {
+      const items = await this._req(`/contents/${path}?ref=${branch}`);
+      if (!Array.isArray(items)) return [];
+      return items
+        .filter(i => i.type === 'dir')
+        .map(i => i.name);
+    } catch {
+      return [];
+    }
+  }
+
+  // ─── Landing README (Contents API — single file) ──────────────
+
+  async pushReadme(branch, content) {
+    let sha = null;
+    try {
+      const f = await this._req(`/contents/README.md?ref=${branch}`);
+      sha = f.sha;
+    } catch (_) { /* file does not exist yet */ }
+
+    const payload = {
+      message: '📚 Initialize CP Solution Sync repository',
+      content: utf8ToBase64(content),
+      branch
+    };
+    if (sha) payload.sha = sha;
+
+    return this._req('/contents/README.md', {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  // ─── Stats README update ──────────────────────────────────────
+
+  /**
+   * Reads existing README.md, replaces the content between
