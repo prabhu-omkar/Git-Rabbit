@@ -198,3 +198,53 @@ export class GitHubApiClient {
           continue;
         }
         throw err;
+      }
+    }
+  }
+
+  // ─── Default README content ───────────────────────────────────
+
+  static get README_CONTENT() {
+    return `<div align="center">
+
+# 🏆 Competitive Programming Vault
+
+**An automated, meticulously organized archive of competitive programming solutions.**<br/>
+Auto-synced from LeetCode, Codeforces, and AtCoder via **[Git-Rabbit](https://github.com/prabhu-omkar/Git-Rabbit)**.
+
+<br/>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Actively_Solving-0ea5e9?style=for-the-badge&logo=github&logoColor=white" alt="Status" />
+  <img src="https://img.shields.io/badge/Algorithms-Optimized-10b981?style=for-the-badge" alt="Algorithms" />
+</p>
+
+</div>
+
+---
+
+## 📖 Overview
+
+This repository serves as a personal knowledge base and portfolio for algorithmic problem-solving. Every solution here has been officially evaluated and accepted by the respective platform's judging system. 
+
+Each entry is automatically documented with:
+- The full problem statement and constraints.
+- The accepted source code.
+- Detailed metadata including time complexity, space complexity, execution time, and memory usage.
+
+---
+
+## 📊 Live Statistics
+
+> [!NOTE]  
+> The statistics below are dynamically updated on every successful commit by Git-Rabbit.
+
+<!-- STATS:START -->
+<!-- STATS:END -->
+
+---
+
+## 🏗️ Repository Structure
+
+Solutions are organized strictly by platform, problem ID, and title. A typical solution directory looks like this:
+
