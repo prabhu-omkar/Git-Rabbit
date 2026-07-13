@@ -148,3 +148,53 @@ export class GitHubApiClient {
   }
 
   // ─── Single-commit multi-file push (Git Data API) ─────────────
+
+  async pushFiles(branch, files, commitMessage) {
+    const blobShas = await Promise.all(
+      files.map(f =>
+        this._req('/git/blobs', {
+          method: 'POST',
+          body: JSON.stringify({ content: utf8ToBase64(f.content), encoding: 'base64' })
+        }).then(b => b.sha)
+      )
+    );
+
+    const MAX_RETRIES = 3;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const ref = await this._req(`/git/ref/heads/${branch}`);
+        const latestCommitSha = ref.object.sha;
+
+        const commitObj = await this._req(`/git/commits/${latestCommitSha}`);
+        const baseTreeSha = commitObj.tree.sha;
+
+        const tree = files.map((f, i) => ({
+          path: f.path, mode: '100644', type: 'blob', sha: blobShas[i]
+        }));
+
+        const newTree = await this._req('/git/trees', {
+          method: 'POST',
+          body: JSON.stringify({ base_tree: baseTreeSha, tree })
+        });
+
+        const newCommit = await this._req('/git/commits', {
+          method: 'POST',
+          body: JSON.stringify({
+            message: commitMessage,
+            tree: newTree.sha,
+            parents: [latestCommitSha]
+          })
+        });
+
+        await this._req(`/git/refs/heads/${branch}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ sha: newCommit.sha })
+        });
+
+        return { commitSha: newCommit.sha, treeSha: newTree.sha };
+      } catch (err) {
+        if (attempt < MAX_RETRIES && /fast.forward/i.test(err.message)) {
+          await delay(500 * attempt);
+          continue;
+        }
+        throw err;
