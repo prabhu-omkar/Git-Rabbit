@@ -248,3 +248,43 @@ Each entry is automatically documented with:
 
 Solutions are organized strictly by platform, problem ID, and title. A typical solution directory looks like this:
 
+\`\`\`text
+📦 competitive-programming/
+├── 📁 LeetCode/
+│   ├── 📁 0001-Two-Sum/
+│   │   ├── 📄 Question.md        # Full problem statement and rules
+│   │   ├── 📄 Solution.cpp       # The accepted algorithm code
+│   │   └── 📄 Notes.md           # Time/Space complexities, tags, and stats
+│   └── ...
+├── 📁 Codeforces/
+│   └── 📁 1500A-Watermelon/
+│       └── ...
+└── 📄 README.md                  # This live dashboard
+\`\`\`
+
+---
+
+## 🚀 Supported Platforms
+
+| Platform | Domain | Integration Method |
+|:---------|:-------|:-------------------|
+| <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png" width="14"/> **LeetCode** | \`leetcode.com\` | GraphQL API |
+| <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Codeforces_logo.svg" width="14"/> **Codeforces** | \`codeforces.com\` | Public REST API |
+| **AtCoder** | \`atcoder.jp\` | Kenkoooo API |
+
+---
+
+<div align="center">
+<sub>Powered by <strong><a href="https://github.com/prabhu-omkar/Git-Rabbit">Git-Rabbit</a></strong> 🐇</sub>
+</div>
+`;
+  }
+}
+
+// ─── Utilities ──────────────────────────────────────────────────
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
