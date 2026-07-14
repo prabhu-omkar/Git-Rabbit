@@ -173,3 +173,88 @@ async function pushSolution(payload) {
 
   return { success: true, commitSha: result.commitSha, dir, branch };
 }
+
+/* ── Rich Notes.md Builder ─────────────────────────────────── */
+
+function buildNotesMd({ platformName, problemId, problemTitle, customNotes, timeComplexity, spaceComplexity, metadata }) {
+  const m = metadata || {};
+  const lines = [];
+
+  lines.push(`# 📝 Notes — ${platformName} ${problemId}: ${problemTitle}`, '');
+
+  // Metadata section
+  if (m.difficulty || m.tags?.length || m.runtime || m.memory || timeComplexity || spaceComplexity) {
+    lines.push('## 📊 Submission Stats', '');
+    lines.push('| Metric | Value |');
+    lines.push('|:-------|:------|');
+    if (m.difficulty) lines.push(`| **Difficulty** | ${m.difficulty} |`);
+    if (m.tags?.length) lines.push(`| **Topics** | ${m.tags.join(', ')} |`);
+    if (timeComplexity) lines.push(`| **Time Complexity** | \`${timeComplexity}\` |`);
+    if (spaceComplexity) lines.push(`| **Space Complexity** | \`${spaceComplexity}\` |`);
+    if (m.runtime) {
+      const rt = m.runtimePct ? `${m.runtime} (beats ${m.runtimePct})` : m.runtime;
+      lines.push(`| **Runtime** | ${rt} |`);
+    }
+    if (m.memory) {
+      const mem = m.memoryPct ? `${m.memory} (beats ${m.memoryPct})` : m.memory;
+      lines.push(`| **Memory** | ${mem} |`);
+    }
+    if (m.lang) lines.push(`| **Language** | ${m.lang} |`);
+    lines.push('');
+  }
+
+  // User notes section
+  lines.push('## 💡 Approach', '');
+
+  if (customNotes && customNotes !== 'No notes provided.') {
+    lines.push(customNotes);
+  } else {
+    lines.push('_No notes provided._');
+  }
+
+  lines.push('');
+  lines.push('## ⏱️ Complexity Analysis', '');
+  lines.push(`- **Time:** \`${timeComplexity || 'O(?)'}\``);
+  lines.push(`- **Space:** \`${spaceComplexity || 'O(?)'}\``);
+  lines.push('');
+  lines.push('---');
+  lines.push(`> Synced on ${new Date().toISOString().slice(0, 10)} via **Git-Rabbit**`);
+
+  return lines.join('\n');
+}
+
+/* ── Stats Computation ─────────────────────────────────────── */
+
+function computeStats(history) {
+  const byPlatform = {};
+  const byDifficulty = {};
+  const byLang = {};
+
+  for (const h of history) {
+    byPlatform[h.platform] = (byPlatform[h.platform] || 0) + 1;
+    if (h.difficulty) {
+      // Normalize: "Easy", "Medium", "Hard", "CF 1200", etc.
+      const d = h.difficulty.replace(/^CF\s*/, 'CF ');
+      byDifficulty[d] = (byDifficulty[d] || 0) + 1;
+    }
+    if (h.lang) byLang[h.lang] = (byLang[h.lang] || 0) + 1;
+  }
+
+  return {
+    total: history.length,
+    byPlatform,
+    byDifficulty,
+    byLang,
+    lastPush: history.length ? history[history.length - 1].timestamp : null
+  };
+}
+
+/* ── Stats README Update (fire-and-forget) ─────────────────── */
+
+async function updateReadmeStatsAsync(client, branch, history) {
+  try {
+    const stats = computeStats(history);
+    const md = buildStatsMarkdown(stats);
+    await client.updateReadmeStats(branch, md);
+  } catch {
+    // Non-critical — don't let stats failure break the push
