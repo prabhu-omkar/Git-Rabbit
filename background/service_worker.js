@@ -83,3 +83,93 @@ async function checkDuplicate({ platformName, problemId, problemTitle }) {
 
   return { success: true, exists, dir };
 }
+
+/* ── Is Pushed (local history) ─────────────────────────────── */
+
+async function isPushed({ platformName, problemId }) {
+  const store = await chrome.storage.local.get('pushHistory');
+  const history = store.pushHistory || [];
+  const key = `${platformName}:${problemId}`;
+  const entry = history.find(h => h.key === key);
+  return { success: true, pushed: !!entry, entry: entry || null };
+}
+
+/* ── Get Push History ──────────────────────────────────────── */
+
+async function getPushHistory() {
+  const store = await chrome.storage.local.get('pushHistory');
+  return { success: true, history: store.pushHistory || [] };
+}
+
+/* ── Get Stats ─────────────────────────────────────────────── */
+
+async function getStats() {
+  const store = await chrome.storage.local.get('pushHistory');
+  const history = store.pushHistory || [];
+  return { success: true, stats: computeStats(history) };
+}
+
+/* ── Push Solution ─────────────────────────────────────────── */
+
+async function pushSolution(payload) {
+  const store = await chrome.storage.local.get(['githubPat', 'githubOwner', 'githubRepoName', 'targetBranch']);
+  if (!store.githubPat || !store.githubOwner || !store.githubRepoName) {
+    throw new Error('GitHub not configured. Open extension settings first.');
+  }
+
+  const client = new GitHubApiClient(store.githubPat, store.githubOwner, store.githubRepoName);
+  const branch = store.targetBranch || await client.getDefaultBranch();
+
+  const {
+    platformName, problemId, problemTitle,
+    problemDescription, code, languageExt,
+    customNotes, timeComplexity, spaceComplexity, metadata, overwrite
+  } = payload;
+
+  const dirName = sanitize(problemTitle);
+  const dir = `${platformName}/${problemId}-${dirName}`;
+
+  // ── Build rich Notes.md ──────────────────────────────
+  const notesMd = buildNotesMd({
+    platformName, problemId, problemTitle,
+    customNotes, timeComplexity, spaceComplexity, metadata
+  });
+
+  // ── Build Question.md header ─────────────────────────
+  const files = [
+    { path: `${dir}/Question.md`,                      content: problemDescription },
+    { path: `${dir}/Solution.${languageExt || 'txt'}`, content: code },
+    { path: `${dir}/Notes.md`,                         content: notesMd }
+  ];
+
+  const action = overwrite ? 'Update' : 'Add';
+  const commitMsg = `✅ ${action} ${platformName} ${problemId}: ${problemTitle}`;
+  const result = await client.pushFiles(branch, files, commitMsg);
+
+  // ── Record in local push history ─────────────────────
+  const historyStore = await chrome.storage.local.get('pushHistory');
+  const history = historyStore.pushHistory || [];
+  const key = `${platformName}:${problemId}`;
+
+  // Remove old entry for same problem if updating
+  const filtered = history.filter(h => h.key !== key);
+  filtered.push({
+    key,
+    platform: platformName,
+    id: problemId,
+    title: problemTitle,
+    difficulty: metadata?.difficulty || null,
+    tags: metadata?.tags || [],
+    lang: languageExt || 'txt',
+    commitSha: result.commitSha,
+    dir,
+    timestamp: new Date().toISOString()
+  });
+
+  await chrome.storage.local.set({ pushHistory: filtered });
+
+  // ── Update README stats (non-blocking) ───────────────
+  updateReadmeStatsAsync(client, branch, filtered);
+
+  return { success: true, commitSha: result.commitSha, dir, branch };
+}
