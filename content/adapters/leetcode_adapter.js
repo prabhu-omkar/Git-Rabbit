@@ -108,3 +108,48 @@ class LeetCodeAdapter extends PlatformAdapter {
   // ── Code ──────────────────────────────────────────────
   getSubmittedCode() {
     if (this._submissionCache?.code) return this._submissionCache.code;
+    return '// Code not yet fetched.';
+  }
+
+  // ── Language ──────────────────────────────────────────
+  getLanguageExtension() {
+    if (this._submissionCache?.lang) {
+      const lang = this._submissionCache.lang.toLowerCase();
+      for (const [k, v] of Object.entries(LeetCodeAdapter.LANG_EXT))
+        if (lang.includes(k)) return v;
+    }
+    for (const sel of [
+      'button[id*="headlessui-listbox-button"]',
+      'div[class*="css-"] button',
+    ]) {
+      const el = document.querySelector(sel);
+      const t = el?.textContent.trim().toLowerCase();
+      if (t) for (const [k, v] of Object.entries(LeetCodeAdapter.LANG_EXT))
+        if (t.includes(k)) return v;
+    }
+    return 'cpp';
+  }
+
+  // ── Accepted ──────────────────────────────────────────
+  isSubmissionAccepted() {
+    for (const sel of [
+      'span[data-e2e-locator="submission-result"]',
+      'span[class*="text-sd-positive"]',
+      'span.text-green-s',
+    ]) {
+      const el = document.querySelector(sel);
+      if (el?.textContent.trim().toLowerCase().includes('accepted')) return true;
+    }
+    return false;
+  }
+
+  // ── Rich metadata accessor ────────────────────────────
+  getMetadata() {
+    const q = this._questionCache || {};
+    const s = this._submissionCache || {};
+    return {
+      difficulty:  q.difficulty || null,
+      tags:        (q.topicTags || []).map(t => t.name),
+      acRate:      q.acRate ? parseFloat(q.acRate).toFixed(1) + '%' : null,
+      runtime:     s.runtimeDisplay || null,
+      memory:      s.memoryDisplay || null,
