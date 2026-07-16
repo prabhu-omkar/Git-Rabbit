@@ -58,3 +58,53 @@ class LeetCodeAdapter extends PlatformAdapter {
       const el = document.querySelector(sel);
       const m = el?.textContent.trim().match(/^(\d+)\./);
       if (m) return m[1].padStart(4, '0');
+    }
+    const dm = document.title.match(/^(\d+)\./);
+    if (dm) return dm[1].padStart(4, '0');
+    return '0000';
+  }
+
+  // ── Problem Description (with metadata header) ────────
+  getProblemDescription() {
+    const id = this.getProblemId();
+    const title = this.getProblemTitle();
+    const meta = this._questionCache;
+
+    const lines = [`# ${id}. ${title}`, ''];
+
+    // Metadata badge row
+    if (meta) {
+      const badges = [];
+      if (meta.difficulty) badges.push(`**Difficulty:** ${meta.difficulty}`);
+      if (meta.topicTags?.length) {
+        badges.push(`**Tags:** ${meta.topicTags.map(t => `\`${t.name}\``).join(', ')}`);
+      }
+      if (badges.length) {
+        lines.push(badges.join(' · '), '');
+      }
+      if (meta.acRate) {
+        lines.push(`**Acceptance Rate:** ${parseFloat(meta.acRate).toFixed(1)}%`, '');
+      }
+      lines.push('---', '');
+    }
+
+    // Scraped description
+    for (const sel of [
+      'div[data-track-load="description_content"]',
+      'div.elfjS',
+      'div._1l1MA',
+    ]) {
+      const el = document.querySelector(sel);
+      if (el) {
+        lines.push(htmlToMd(el));
+        return lines.join('\n');
+      }
+    }
+
+    lines.push('_Description could not be scraped._');
+    return lines.join('\n');
+  }
+
+  // ── Code ──────────────────────────────────────────────
+  getSubmittedCode() {
+    if (this._submissionCache?.code) return this._submissionCache.code;
