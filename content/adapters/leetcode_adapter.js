@@ -193,3 +193,43 @@ class LeetCodeAdapter extends PlatformAdapter {
     const query = `
       query questionData($titleSlug: String!) {
         question(titleSlug: $titleSlug) {
+          questionFrontendId
+          title
+          difficulty
+          acRate
+          topicTags { name slug }
+        }
+      }
+    `;
+    const json = await this._gql(query, { titleSlug: slug });
+    this._questionCache = json?.data?.question || null;
+  }
+
+  /** Fetch full submission code + performance stats */
+  async fetchSubmissionCode() {
+    // Also fetch question metadata in parallel
+    const metaPromise = this._questionCache ? Promise.resolve() : this.fetchQuestionData();
+
+    const subId = this._getSubmissionIdFromUrl();
+    const codePromise = subId
+      ? this._fetchSubmissionById(subId)
+      : this._fetchLatestAccepted(this._getProblemSlug());
+
+    await Promise.all([metaPromise, codePromise]);
+    return this._submissionCache;
+  }
+
+  async _fetchSubmissionById(submissionId) {
+    if (this._lastFetchedId === submissionId && this._submissionCache) {
+      return this._submissionCache;
+    }
+
+    const query = `
+      query submissionDetails($submissionId: Int!) {
+        submissionDetails(submissionId: $submissionId) {
+          code
+          lang { name verboseName }
+          statusDisplay
+          timestamp
+          runtimeDisplay
+          memoryDisplay
