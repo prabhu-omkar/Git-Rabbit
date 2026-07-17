@@ -153,3 +153,43 @@ class LeetCodeAdapter extends PlatformAdapter {
       acRate:      q.acRate ? parseFloat(q.acRate).toFixed(1) + '%' : null,
       runtime:     s.runtimeDisplay || null,
       memory:      s.memoryDisplay || null,
+      runtimePct:  s.runtimePercentile ? parseFloat(s.runtimePercentile).toFixed(1) + '%' : null,
+      memoryPct:   s.memoryPercentile ? parseFloat(s.memoryPercentile).toFixed(1) + '%' : null,
+      lang:        s.lang || null,
+    };
+  }
+
+  // ── URL helpers ───────────────────────────────────────
+  _getProblemSlug() {
+    const m = location.pathname.match(/\/problems\/([^/]+)/);
+    return m ? m[1] : null;
+  }
+
+  _getSubmissionIdFromUrl() {
+    const m = location.pathname.match(/\/submissions\/(\d+)/);
+    return m ? m[1] : null;
+  }
+
+  // ─────────────────────────────────────────────────────
+  // GRAPHQL API
+  // ─────────────────────────────────────────────────────
+
+  async _gql(query, variables) {
+    const resp = await fetch('https://leetcode.com/graphql/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+      credentials: 'include'
+    });
+    if (!resp.ok) throw new Error(`LeetCode API ${resp.status}`);
+    return resp.json();
+  }
+
+  /** Fetch question metadata: difficulty, tags, acceptance rate */
+  async fetchQuestionData() {
+    const slug = this._getProblemSlug();
+    if (!slug) return;
+
+    const query = `
+      query questionData($titleSlug: String!) {
+        question(titleSlug: $titleSlug) {
