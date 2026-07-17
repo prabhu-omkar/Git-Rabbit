@@ -268,3 +268,28 @@ class LeetCodeAdapter extends PlatformAdapter {
     const json = await this._gql(query, { slug, limit: 5, offset: 0 });
     const subs = json?.data?.questionSubmissionList?.submissions;
     if (!subs?.length) throw new Error('No accepted submissions found.');
+    return this._fetchSubmissionById(subs[0].id);
+  }
+}
+
+/* ── HTML → Markdown ─────────────────────────────────── */
+
+function htmlToMd(el) {
+  const div = el.cloneNode(true);
+  div.querySelectorAll('#git-rabbit-host').forEach(n => n.remove());
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+    const tag = node.tagName.toLowerCase();
+    const inner = () => Array.from(node.childNodes).map(walk).join('');
+    switch (tag) {
+      case 'h1': return `\n# ${inner().trim()}\n\n`;
+      case 'h2': return `\n## ${inner().trim()}\n\n`;
+      case 'h3': return `\n### ${inner().trim()}\n\n`;
+      case 'p':  return `\n${inner().trim()}\n\n`;
+      case 'br': return '\n';
+      case 'strong': case 'b': return `**${inner()}**`;
+      case 'em': case 'i':    return `*${inner()}*`;
+      case 'code': return node.parentElement?.tagName === 'PRE' ? inner() : `\`${inner()}\``;
+      case 'pre':  return `\n\`\`\`\n${inner().trim()}\n\`\`\`\n\n`;
