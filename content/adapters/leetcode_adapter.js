@@ -233,3 +233,38 @@ class LeetCodeAdapter extends PlatformAdapter {
           timestamp
           runtimeDisplay
           memoryDisplay
+          runtimePercentile
+          memoryPercentile
+        }
+      }
+    `;
+    const json = await this._gql(query, { submissionId: parseInt(submissionId, 10) });
+    const d = json?.data?.submissionDetails;
+    if (!d?.code) throw new Error('No code in submission response.');
+
+    this._submissionCache = {
+      code: d.code,
+      lang: d.lang?.name || d.lang?.verboseName || '',
+      status: d.statusDisplay,
+      runtimeDisplay: d.runtimeDisplay || null,
+      memoryDisplay: d.memoryDisplay || null,
+      runtimePercentile: d.runtimePercentile || null,
+      memoryPercentile: d.memoryPercentile || null,
+    };
+    this._lastFetchedId = submissionId;
+    return this._submissionCache;
+  }
+
+  async _fetchLatestAccepted(slug) {
+    if (!slug) throw new Error('Cannot determine problem slug.');
+
+    const query = `
+      query submissionList($slug: String!, $limit: Int, $offset: Int) {
+        questionSubmissionList(questionSlug: $slug, limit: $limit, offset: $offset, status: 10) {
+          submissions { id statusDisplay lang timestamp }
+        }
+      }
+    `;
+    const json = await this._gql(query, { slug, limit: 5, offset: 0 });
+    const subs = json?.data?.questionSubmissionList?.submissions;
+    if (!subs?.length) throw new Error('No accepted submissions found.');
