@@ -133,3 +133,63 @@ class CodeforcesAdapter extends PlatformAdapter {
     let m = p.match(/\/contest\/(\d+)\/problem\/([A-Z0-9]+)/i) ||
             p.match(/\/problemset\/problem\/(\d+)\/([A-Z0-9]+)/i);
     if (m) return { contestId: m[1], index: m[2].toUpperCase() };
+    // Submission page: /contest/123/submission/456
+    m = p.match(/\/contest\/(\d+)\/submission/i);
+    if (m) return { contestId: m[1], index: null };
+    return { contestId: null, index: null };
+  }
+
+  _getSubmissionIdFromUrl() {
+    const m = location.pathname.match(/\/submission\/(\d+)/);
+    return m ? m[1] : null;
+  }
+
+  // ── CODEFORCES API ────────────────────────────────────
+
+  async fetchSubmissionCode() {
+    const { contestId } = this._parseProblemFromUrl();
+
+    // Fetch problem tags/rating
+    const metaPromise = this._problemCache
+      ? Promise.resolve()
+      : this._fetchProblemMeta();
+
+    // Fetch submission code
+    let codePromise = Promise.resolve();
+    const subId = this._getSubmissionIdFromUrl();
+    if (subId && contestId) {
+      codePromise = this._fetchSubmissionFromApi(contestId, subId);
+    }
+    // If not on a submission page, DOM scraping handles it via getSubmittedCode()
+
+    await Promise.all([metaPromise, codePromise]);
+    return this._submissionCache;
+  }
+
+  async _fetchSubmissionFromApi(contestId, submissionId) {
+    try {
+      const url = `https://codeforces.com/api/contest.status?contestId=${contestId}&handle=&from=1&count=50`;
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const json = await resp.json();
+      if (json.status !== 'OK') return;
+
+      const sub = json.result.find(s => String(s.id) === String(submissionId));
+      if (!sub) return;
+
+      this._submissionCache = {
+        code: null, // API doesn't return code source for others' submissions
+        lang: sub.programmingLanguage || '',
+        timeMs: sub.timeConsumedMillis,
+        memoryBytes: sub.memoryConsumedBytes,
+      };
+
+      // Try to get actual code from the submission page DOM
+      if (!this._submissionCache.code) {
+        const codeEl = document.querySelector('#program-source-text') ||
+                       document.querySelector('pre.prettyprint');
+        if (codeEl) this._submissionCache.code = codeEl.textContent.trim();
+      }
+    } catch {
+      // Fall back to DOM scraping
+    }
