@@ -193,3 +193,48 @@ class CodeforcesAdapter extends PlatformAdapter {
     } catch {
       // Fall back to DOM scraping
     }
+  }
+
+  async _fetchProblemMeta() {
+    try {
+      const { contestId, index } = this._parseProblemFromUrl();
+      if (!contestId) return;
+
+      const url = `https://codeforces.com/api/contest.standings?contestId=${contestId}&from=1&count=1&showUnofficial=false`;
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const json = await resp.json();
+      if (json.status !== 'OK') return;
+
+      const problems = json.result?.problems || [];
+      const match = index
+        ? problems.find(p => p.index.toUpperCase() === index.toUpperCase())
+        : problems[0];
+
+      if (match) {
+        this._problemCache = {
+          name: match.name,
+          rating: match.rating || null,
+          tags: match.tags || [],
+          contestId: match.contestId,
+          index: match.index,
+        };
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+}
+
+/* ── CF HTML → Markdown ──────────────────────────────── */
+
+function cfHtmlToMd(el) {
+  function walk(n) {
+    if (n.nodeType === Node.TEXT_NODE) return n.textContent;
+    if (n.nodeType !== Node.ELEMENT_NODE) return '';
+    const tag = n.tagName.toLowerCase();
+    const inner = () => Array.from(n.childNodes).map(walk).join('');
+    switch (tag) {
+      case 'div':
+        return n.classList.contains('section-title') ? `\n### ${inner().trim()}\n\n` : `\n${inner()}\n`;
+      case 'p':  return `\n${inner().trim()}\n\n`;
