@@ -133,3 +133,63 @@ class AtCoderAdapter extends PlatformAdapter {
     const s = this._submissionCache || {};
     return {
       difficulty: p.point ? `${p.point} pts` : null,
+      tags: [],
+      point: p.point || null,
+      solverCount: p.solverCount || null,
+      runtime: s.executionTime || null,
+      memory: s.memoryKb ? `${s.memoryKb} KB` : null,
+      lang: s.lang || null,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────
+  // API INTEGRATION
+  // ─────────────────────────────────────────────────────
+
+  async fetchSubmissionCode() {
+    const { contest, task, submissionId } = this._parseUrl();
+
+    // Fetch problem metadata from kenkoooo API (parallel)
+    const metaPromise = this._problemCache
+      ? Promise.resolve()
+      : this._fetchProblemMeta(task);
+
+    // Fetch submission code
+    let codePromise;
+    if (submissionId) {
+      // On submission detail page — scrape code from DOM (it's fully rendered)
+      codePromise = this._fetchSubmissionFromPage(contest, submissionId);
+    } else if (contest && task) {
+      // On problem page — find latest AC submission via AtCoder's submission list
+      codePromise = this._fetchLatestAcSubmission(contest, task);
+    } else {
+      codePromise = Promise.resolve();
+    }
+
+    await Promise.all([metaPromise, codePromise]);
+    return this._submissionCache;
+  }
+
+  /** Fetch problem metadata from kenkoooo's AtCoder Problems API */
+  async _fetchProblemMeta(taskId) {
+    if (!taskId) return;
+    try {
+      const url = 'https://kenkoooo.com/atcoder/resources/merged-problems.json';
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const problems = await resp.json();
+      const match = problems.find(p => p.id === taskId);
+      if (match) {
+        this._problemCache = {
+          title: match.title || null,
+          point: match.point || null,
+          solverCount: match.solver_count || null,
+          contestId: match.contest_id || null,
+        };
+      }
+    } catch { /* silently fail */ }
+  }
+
+  /** Scrape code from submission detail page */
+  async _fetchSubmissionFromPage(contest, submissionId) {
+    try {
