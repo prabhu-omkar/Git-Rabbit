@@ -68,3 +68,68 @@ class AtCoderAdapter extends PlatformAdapter {
     const id = this.getProblemId();
     const title = this.getProblemTitle();
     const meta = this.getMetadata();
+
+    const lines = [`# ${id} — ${title}`, ''];
+    if (meta.point) lines.push(`**Score:** ${meta.point} pts`);
+    if (meta.solverCount) lines.push(`**Solvers:** ${meta.solverCount}`);
+    if (meta.point || meta.solverCount) lines.push('', '---', '');
+
+    // Scrape the problem statement from the page
+    const el = document.querySelector('#task-statement') ||
+               document.querySelector('.lang-en') ||
+               document.querySelector('.lang-ja');
+    if (el) {
+      lines.push(acHtmlToMd(el));
+    } else {
+      lines.push('_Description unavailable._');
+    }
+    return lines.join('\n');
+  }
+
+  // ── Code ──────────────────────────────────────────────
+  getSubmittedCode() {
+    if (this._submissionCache?.code) return this._submissionCache.code;
+    // DOM fallback for submission detail pages
+    const pre = document.querySelector('#submission-code') ||
+                document.querySelector('pre.plain') ||
+                document.querySelector('pre');
+    if (pre?.textContent.trim()) return pre.textContent.trim();
+    return '// Code could not be scraped.';
+  }
+
+  // ── Language ──────────────────────────────────────────
+  getLanguageExtension() {
+    if (this._submissionCache?.lang) {
+      const l = this._submissionCache.lang.toLowerCase();
+      for (const [k, v] of Object.entries(AtCoderAdapter.LANG_MAP))
+        if (l.includes(k)) return v;
+    }
+    // DOM fallback
+    const el = document.querySelector('select[name="data.LanguageId"] option:checked') ||
+               document.querySelector('.select2-selection__rendered') ||
+               document.querySelector('td.text-center:nth-child(4)');
+    const t = el?.textContent.trim().toLowerCase() || '';
+    for (const [k, v] of Object.entries(AtCoderAdapter.LANG_MAP))
+      if (t.includes(k)) return v;
+    return 'cpp';
+  }
+
+  // ── Accepted ──────────────────────────────────────────
+  isSubmissionAccepted() {
+    // Green AC label on submission page
+    const label = document.querySelector('.label-success');
+    if (label?.textContent.trim() === 'AC') return true;
+    // Submission result in table rows
+    const cells = document.querySelectorAll('td.text-center');
+    for (const c of cells) {
+      if (c.textContent.trim() === 'AC') return true;
+    }
+    return false;
+  }
+
+  // ── Metadata ──────────────────────────────────────────
+  getMetadata() {
+    const p = this._problemCache || {};
+    const s = this._submissionCache || {};
+    return {
+      difficulty: p.point ? `${p.point} pts` : null,
