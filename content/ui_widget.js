@@ -1,0 +1,65 @@
+/**
+ * Shadow DOM widget — Monochrome Terminal Theme
+ */
+class GitRabbitUIWidget {
+  constructor(adapter, onPush, previouslySynced) {
+    this.adapter = adapter;
+    this.onPush = onPush;
+    this.previouslySynced = previouslySynced;
+    this.host = null;
+    this.shadow = null;
+    this.expanded = true;
+  }
+
+  static _alive() {
+    try { return !!(chrome && chrome.runtime && chrome.runtime.id); }
+    catch { return false; }
+  }
+
+  inject() {
+    if (document.getElementById('git-rabbit-host')) return;
+    if (!GitRabbitUIWidget._alive()) return;
+
+    this.host = document.createElement('div');
+    this.host.id = 'git-rabbit-host';
+    this.host.style.cssText =
+      'position:fixed;bottom:20px;right:20px;z-index:2147483647;';
+
+    this.shadow = this.host.attachShadow({ mode: 'open' });
+
+    const platform = this.adapter.getPlatformName();
+    const title    = this.adapter.getProblemTitle();
+    const id       = this.adapter.getProblemId();
+    const meta     = typeof this.adapter.getMetadata === 'function' ? this.adapter.getMetadata() : {};
+
+    const diffBadge = this._diffBadge(meta.difficulty);
+    const syncBadge = this.previouslySynced
+      ? `<span class="tag tag--sync" title="SYNCED: ${this.previouslySynced.timestamp?.slice(0,10)||''}">[SYNCED]</span>`
+      : '';
+
+    this.shadow.innerHTML = `
+${WIDGET_STYLE}
+<div class="w" id="widget">
+  <div class="w__hdr">
+    <div class="w__brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 16a3 3 0 0 1 2.24 5"/>
+        <path d="M18 12h.01"/>
+        <path d="M18 21h-8a4 4 0 0 1-4-4 7 7 0 0 1 7-7h.2L9.6 6.4a1.01 1.01 0 0 1-.1-1.52L11 3a2.02 2.02 0 0 1 2.87 0l2.56 2.56a2.01 2.01 0 0 1 0 2.87L14.7 10"/>
+      </svg>
+      <span>GIT-RABBIT</span>
+    </div>
+    <div class="w__controls">
+      <button id="optBtn" class="w__btn-icon" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </button>
+      <button id="minBtn" class="w__btn-icon" title="Minimize">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="w__body" id="body">
+    <div class="w__tags">
+      <span class="tag tag--plat">[${platform}]</span>
+      <span class="tag tag--ac">[AC]</span>
