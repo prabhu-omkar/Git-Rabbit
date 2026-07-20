@@ -253,3 +253,58 @@ class AtCoderAdapter extends PlatformAdapter {
       const lang = langCell[3]?.textContent.trim() || null;
       const execTime = langCell[7]?.textContent.trim() || null;
       const memoryText = langCell[8]?.textContent.trim() || null;
+
+      // Now fetch the actual code
+      await this._fetchSubmissionFromPage(contest, subId);
+
+      // Merge metadata from the list row
+      if (this._submissionCache) {
+        this._submissionCache.lang = this._submissionCache.lang || lang;
+        this._submissionCache.executionTime = this._submissionCache.executionTime || execTime;
+        if (memoryText) {
+          const kb = parseInt(memoryText.replace(/[^0-9]/g, ''), 10);
+          if (!isNaN(kb)) this._submissionCache.memoryKb = kb;
+        }
+      }
+    } catch { /* silently fail */ }
+  }
+
+  _scrapeLangFromPage() {
+    const rows = document.querySelectorAll('#main-container table tr');
+    for (const row of rows) {
+      const th = row.querySelector('th');
+      if (th?.textContent.includes('Language')) {
+        return row.querySelector('td')?.textContent.trim() || null;
+      }
+    }
+    return null;
+  }
+
+  _scrapeStatFromPage(label) {
+    const rows = document.querySelectorAll('#main-container table tr');
+    for (const row of rows) {
+      const th = row.querySelector('th');
+      if (th?.textContent.includes(label)) {
+        return row.querySelector('td')?.textContent.trim() || null;
+      }
+    }
+    return null;
+  }
+
+  _scrapeMemoryFromPage() {
+    const val = this._scrapeStatFromPage('Memory');
+    if (!val) return null;
+    const kb = parseInt(val.replace(/[^0-9]/g, ''), 10);
+    return isNaN(kb) ? null : kb;
+  }
+}
+
+/* ── HTML → Markdown (shared for AtCoder) ────────────── */
+function acHtmlToMd(el) {
+  function walk(n) {
+    if (n.nodeType === Node.TEXT_NODE) return n.textContent;
+    if (n.nodeType !== Node.ELEMENT_NODE) return '';
+    const tag = n.tagName.toLowerCase();
+    const inner = () => Array.from(n.childNodes).map(walk).join('');
+    switch (tag) {
+      case 'h1': return `\n# ${inner().trim()}\n\n`;
