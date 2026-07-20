@@ -193,3 +193,63 @@ class AtCoderAdapter extends PlatformAdapter {
   /** Scrape code from submission detail page */
   async _fetchSubmissionFromPage(contest, submissionId) {
     try {
+      // If we're on the submission page, code is in the DOM
+      const pre = document.querySelector('#submission-code');
+      if (pre?.textContent.trim()) {
+        // Also grab language and execution time from the table
+        this._submissionCache = {
+          code: pre.textContent.trim(),
+          lang: this._scrapeLangFromPage(),
+          executionTime: this._scrapeStatFromPage('Time'),
+          memoryKb: this._scrapeMemoryFromPage(),
+        };
+        return;
+      }
+
+      // If not on the page, fetch it
+      const resp = await fetch(`https://atcoder.jp/contests/${contest}/submissions/${submissionId}`);
+      if (!resp.ok) return;
+      const html = await resp.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const codePre = doc.querySelector('#submission-code');
+      if (codePre) {
+        this._submissionCache = {
+          code: codePre.textContent.trim(),
+          lang: null,
+          executionTime: null,
+          memoryKb: null,
+        };
+      }
+    } catch { /* silently fail */ }
+  }
+
+  /** Fetch latest AC submission for a task using AtCoder's submission list */
+  async _fetchLatestAcSubmission(contest, task) {
+    try {
+      // AtCoder's submission page with filters
+      const url = `https://atcoder.jp/contests/${contest}/submissions/me?f.Task=${task}&f.Status=AC`;
+      const resp = await fetch(url, { credentials: 'include' });
+      if (!resp.ok) return;
+      const html = await resp.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Find the first submission link in the table
+      const rows = doc.querySelectorAll('table tbody tr');
+      if (rows.length === 0) return;
+
+      const firstRow = rows[0];
+      const link = firstRow.querySelector('td a[href*="/submissions/"]');
+      if (!link) return;
+
+      const subMatch = link.getAttribute('href').match(/\/submissions\/(\d+)/);
+      if (!subMatch) return;
+
+      const subId = subMatch[1];
+
+      // Fetch the submission code
+      const langCell = firstRow.querySelectorAll('td');
+      const lang = langCell[3]?.textContent.trim() || null;
+      const execTime = langCell[7]?.textContent.trim() || null;
+      const memoryText = langCell[8]?.textContent.trim() || null;
