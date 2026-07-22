@@ -178,3 +178,53 @@ ${WIDGET_STYLE}
 }
 
 /* ── Styles ───────────────────────────────────────────── */
+const WIDGET_STYLE = `<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+:host { all: initial; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.w {
+  width: 280px;
+  background: #000;
+  border: 1px solid #333;
+  box-shadow: 0 0 15px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(255,255,255,0.05);
+  color: #e5e5e5;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.w--in { opacity: 1; transform: translateY(0); }
+
+.w__hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 10px;
+  background: #0a0a0a;
+  border-bottom: 1px solid #1f1f1f;
+}
+.w__brand { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: #0ea5e9; }
+.w__brand svg { width: 14px; height: 14px; }
+.w__controls { display: flex; gap: 2px; }
+
+.w__btn-icon {
+  background: none; border: none; cursor: pointer;
+  padding: 2px; color: #737373; transition: 0.2s;
+}
+.w__btn-icon svg { width: 14px; height: 14px; }
+.w__btn-icon:hover { color: #e5e5e5; }
+
+.w__body { padding: 10px; }
+
+.w__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tag { font-size: 9px; font-weight: 700; }
+.tag--plat { color: #a3a3a3; }
+.tag--ac { color: #10b981; }
+.tag--diff { color: #fbbf24; }
+.tag--sync { color: #0ea5e9; }
+
+.w__problem { margin-bottom: 10px; display: flex; flex-direction: column; gap: 2px; }
+.w__id { font-size: 10px; color: #737373; }
+.w__title { font-size: 12px; font-weight: 700; color: #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.w__row { display: flex; gap: 6px; margin-bottom: 10px; }
+.w__input-wrap { position: relative; margin-bottom: 6px; }
