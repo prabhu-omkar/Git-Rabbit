@@ -63,3 +63,63 @@ ${WIDGET_STYLE}
     <div class="w__tags">
       <span class="tag tag--plat">[${platform}]</span>
       <span class="tag tag--ac">[AC]</span>
+      ${diffBadge}
+      ${syncBadge}
+    </div>
+
+    <div class="w__problem">
+      <span class="w__id">${id}</span>
+      <span class="w__title" title="${title}">${title}</span>
+    </div>
+
+    <div class="w__input-wrap">
+      <textarea id="notes" class="w__notes" placeholder="> add notes..." spellcheck="false"></textarea>
+      <div class="w__notes-cursor"></div>
+    </div>
+    
+    <div class="w__row">
+      <div class="w__input-wrap" style="flex:1;">
+        <input type="text" id="tc" class="w__notes w__notes--single" placeholder="> time O(N)" spellcheck="false" />
+        <div class="w__notes-cursor"></div>
+      </div>
+      <div class="w__input-wrap" style="flex:1;">
+        <input type="text" id="sc" class="w__notes w__notes--single" placeholder="> space O(1)" spellcheck="false" />
+        <div class="w__notes-cursor"></div>
+      </div>
+    </div>
+
+    <div id="alert" class="w__alert hide"></div>
+
+    <div class="w__actions">
+      <button id="pushBtn" class="w__push">
+        <svg id="pushIco" class="w__push-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="pushLbl">${this.previouslySynced ? 'UPDATE' : 'COMMIT'}</span>
+      </button>
+    </div>
+  </div>
+</div>`;
+
+    document.body.appendChild(this.host);
+    this._bind();
+
+    requestAnimationFrame(() => {
+      this.shadow.getElementById('widget').classList.add('w--in');
+    });
+  }
+
+  _diffBadge(diff) {
+    if (!diff) return '';
+    return `<span class="tag tag--diff">[${diff.toUpperCase()}]</span>`;
+  }
+
+  _bind() {
+    const s = this.shadow;
+    const minBtn  = s.getElementById('minBtn');
+    const body    = s.getElementById('body');
+    const pushBtn = s.getElementById('pushBtn');
+    const pushIco = s.getElementById('pushIco');
+    const pushLbl = s.getElementById('pushLbl');
+    const optBtn  = s.getElementById('optBtn');
+    const notes   = s.getElementById('notes');
+    const tc      = s.getElementById('tc');
+    const sc      = s.getElementById('sc');
