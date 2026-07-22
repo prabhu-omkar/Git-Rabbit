@@ -123,3 +123,58 @@ ${WIDGET_STYLE}
     const notes   = s.getElementById('notes');
     const tc      = s.getElementById('tc');
     const sc      = s.getElementById('sc');
+    const alert   = s.getElementById('alert');
+    let forceOverwrite = !!this.previouslySynced;
+
+    const showAlert = (msg, ok) => {
+      alert.innerHTML = `> ${msg}`;
+      alert.className = `w__alert ${ok ? 'ok' : 'err'}`;
+    };
+
+    minBtn.addEventListener('click', () => {
+      this.expanded = !this.expanded;
+      body.style.display = this.expanded ? '' : 'none';
+      minBtn.innerHTML = this.expanded
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    });
+
+    optBtn.addEventListener('click', () => {
+      if (!GitRabbitUIWidget._alive()) { showAlert('ERR: EXT_RELOADED', false); return; }
+      chrome.runtime.sendMessage({ action: 'OPEN_OPTIONS' }, () => { void chrome.runtime.lastError; });
+    });
+
+    pushBtn.addEventListener('click', async () => {
+      alert.className = 'w__alert hide';
+      if (!GitRabbitUIWidget._alive()) { showAlert('ERR: EXT_RELOADED', false); return; }
+
+      pushBtn.disabled = true;
+      pushLbl.textContent = 'COMMITTING...';
+
+      const result = await this.onPush({
+        notes: notes.value.trim(),
+        tc: tc.value.trim(),
+        sc: sc.value.trim(),
+        forceOverwrite
+      });
+
+      if (result?.success) {
+        pushIco.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+        showAlert(`OK: ${(result.commitSha||'').slice(0,7)}`, true);
+        pushLbl.textContent = 'DONE';
+        pushBtn.classList.add('w__push--done');
+      } else if (result?.duplicate) {
+        showAlert('ERR: EXISTS. CLICK TO UPDATE.', false);
+        pushLbl.textContent = 'UPDATE';
+        pushBtn.disabled = false;
+        forceOverwrite = true;
+      } else {
+        showAlert(`ERR: ${result?.error || 'UNKNOWN'}`, false);
+        pushLbl.textContent = 'RETRY';
+        pushBtn.disabled = false;
+      }
+    });
+  }
+}
+
+/* ── Styles ───────────────────────────────────────────── */
