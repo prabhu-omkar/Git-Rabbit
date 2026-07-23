@@ -93,3 +93,43 @@
           }
         } catch { /* continue with push */ }
       }
+
+      // Gather metadata
+      const metadata = typeof adapter.getMetadata === 'function'
+        ? adapter.getMetadata()
+        : {};
+
+      const payload = {
+        platformName,
+        problemId,
+        problemTitle,
+        problemDescription: adapter.getProblemDescription(),
+        code:               adapter.getSubmittedCode(),
+        languageExt:        adapter.getLanguageExtension(),
+        customNotes:        notes || 'No notes provided.',
+        timeComplexity:     tc,
+        spaceComplexity:    sc,
+        metadata,
+        overwrite:          !!forceOverwrite
+      };
+
+      // Sanity check
+      if (payload.code.split('\n').length < 3 && !payload.code.includes('//')) {
+        return { success: false, error: 'Scraped code looks incomplete. Refresh and try again.' };
+      }
+
+      const res = await chrome.runtime.sendMessage({ action: 'PUSH_SOLUTION', payload });
+      return res;
+    } catch (err) {
+      if (err.message?.includes('Extension context invalidated')) {
+        return { success: false, error: 'Extension reloaded — refresh page.' };
+      }
+      return { success: false, error: err.message };
+    }
+  }
+
+  destroy();
+  adapter = pickAdapter();
+  if (!adapter) return;
+
+  tick();
