@@ -228,3 +228,28 @@ const WIDGET_STYLE = `<style>
 
 .w__row { display: flex; gap: 6px; margin-bottom: 10px; }
 .w__input-wrap { position: relative; margin-bottom: 6px; }
+.w__input-wrap:last-child { margin-bottom: 0; }
+.w__notes {
+  width: 100%; height: 40px; resize: none;
+  background: #0a0a0a; border: 1px solid #1f1f1f;
+  color: #e5e5e5; padding: 6px 8px; font-size: 10px;
+  font-family: 'JetBrains Mono', monospace; outline: none; transition: 0.2s;
+}
+.w__notes--single { height: 26px; padding: 4px 8px; }
+.w__notes:focus { border-color: #0ea5e9; box-shadow: 0 0 5px rgba(14,165,233,0.2); }
+.w__notes::placeholder { color: #404040; }
+.w__notes-cursor {
+  position: absolute; left: 8px; top: 6px;
+  width: 6px; height: 12px; background: #0ea5e9;
+  pointer-events: none; opacity: 0;
+}
+.w__notes--single + .w__notes-cursor { top: 7px; height: 10px; }
+.w__notes:focus + .w__notes-cursor, .w__notes:not(:placeholder-shown) + .w__notes-cursor { display: none; }
+.w__input-wrap:focus-within .w__notes:placeholder-shown + .w__notes-cursor { display: block; animation: blink 1s step-end infinite; }
+
+.w__alert { padding: 4px 6px; font-size: 9px; margin-bottom: 10px; border-left: 2px solid; animation: glitch 0.2s; }
+.w__alert.ok { background: rgba(16,185,129,0.05); color: #10b981; border-color: #10b981; }
+.w__alert.err { background: rgba(239,68,68,0.05); color: #ef4444; border-color: #ef4444; }
+.w__alert.hide { display: none; }
+
+.w__actions { display: flex; }
