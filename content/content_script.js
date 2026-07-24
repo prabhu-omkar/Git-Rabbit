@@ -133,3 +133,10 @@
   if (!adapter) return;
 
   tick();
+
+  observer = new MutationObserver(() => tick());
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  intervalId = setInterval(tick, 2500);
+})();
+       

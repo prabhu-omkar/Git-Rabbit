@@ -253,3 +253,18 @@ const WIDGET_STYLE = `<style>
 .w__alert.hide { display: none; }
 
 .w__actions { display: flex; }
+.w__push {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: #e5e5e5; color: #000; border: none; padding: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: 0.2s;
+}
+.w__push:hover:not(:disabled) { background: #0ea5e9; color: #fff; box-shadow: 0 0 10px rgba(14,165,233,0.3); }
+.w__push:disabled { opacity: 0.3; cursor: not-allowed; }
+.w__push--done { background: #10b981; color: #fff; }
+.w__push-ico { width: 14px; height: 14px; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes glitch { 0% { transform: translateX(-2px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+</style>`;
+    
