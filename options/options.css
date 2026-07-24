@@ -228,3 +228,104 @@ body {
 .code-block a {
   color: var(--accent);
   text-decoration: none;
+}
+.code-block a:hover { text-decoration: underline; }
+
+/* ── Custom Switch ────────────────────────────────────────── */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 24px;
+  height: 12px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch__box {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--bg-2);
+  border: 1px solid var(--border);
+  transition: .2s;
+}
+.switch__box:before {
+  position: absolute;
+  content: "";
+  height: 8px; width: 8px;
+  left: 1px; bottom: 1px;
+  background-color: var(--text-dim);
+  transition: .2s;
+}
+.switch input:checked + .switch__box {
+  border-color: var(--accent);
+}
+.switch input:checked + .switch__box:before {
+  transform: translateX(12px);
+  background-color: var(--accent);
+  box-shadow: 0 0 5px var(--accent);
+}
+
+/* ── Alert ────────────────────────────────────────────────── */
+.alert {
+  padding: 0.5rem;
+  font-size: 0.65rem;
+  margin-bottom: 1rem;
+  border-left: 2px solid;
+  animation: glitchIn 0.2s;
+}
+@keyframes glitchIn {
+  0% { transform: translateX(-5px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.alert.ok { background: rgba(16,185,129,0.05); color: var(--success); border-color: var(--success); }
+.alert.err { background: rgba(239,68,68,0.05); color: var(--error); border-color: var(--error); }
+
+/* ── Actions ──────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: 0.2s;
+}
+.btn--primary {
+  flex: 2;
+  background: var(--text);
+  color: var(--bg);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 15px var(--accent-dim);
+}
+.btn--sec {
+  background: var(--bg-2);
+  color: var(--text-dim);
+  border-color: var(--border);
+}
+.btn--sec:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.btn__ico { width: 14px; height: 14px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-h); }
+               
