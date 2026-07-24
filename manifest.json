@@ -2,22 +2,77 @@
   "manifest_version": 3,
   "name": "Git-Rabbit",
   "short_name": "Git-Rabbit",
-  "version": "1.0.0",
-  "description": "Auto-sync competitive programming solutions to GitHub",
+  "version": "3.0.0",
+  "description": "Auto-sync competitive programming solutions from LeetCode, Codeforces & AtCoder to GitHub — batched as a single clean commit.",
   "permissions": [
     "storage",
     "activeTab"
   ],
   "host_permissions": [
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://leetcode.com/*",
+    "https://*.leetcode.com/*",
+    "https://codeforces.com/*",
+    "https://*.codeforces.com/*",
+    "https://atcoder.jp/*",
+    "https://*.atcoder.jp/*",
+    "https://kenkoooo.com/*"
   ],
   "background": {
     "service_worker": "background/service_worker.js",
     "type": "module"
   },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://leetcode.com/problems/*",
+        "https://*.leetcode.com/problems/*"
+      ],
+      "js": [
+        "content/adapters/base_adapter.js",
+        "content/adapters/leetcode_adapter.js",
+        "content/ui_widget.js",
+        "content/content_script.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://codeforces.com/problemset/problem/*",
+        "https://codeforces.com/contest/*/problem/*",
+        "https://codeforces.com/contest/*/submission/*",
+        "https://codeforces.com/submissions/*"
+      ],
+      "js": [
+        "content/adapters/base_adapter.js",
+        "content/adapters/codeforces_adapter.js",
+        "content/ui_widget.js",
+        "content/content_script.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://atcoder.jp/contests/*/tasks/*",
+        "https://atcoder.jp/contests/*/submissions/*"
+      ],
+      "js": [
+        "content/adapters/base_adapter.js",
+        "content/adapters/atcoder_adapter.js",
+        "content/ui_widget.js",
+        "content/content_script.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   }
 }
+     
