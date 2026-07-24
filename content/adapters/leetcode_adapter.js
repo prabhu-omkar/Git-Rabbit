@@ -293,3 +293,14 @@ function htmlToMd(el) {
       case 'em': case 'i':    return `*${inner()}*`;
       case 'code': return node.parentElement?.tagName === 'PRE' ? inner() : `\`${inner()}\``;
       case 'pre':  return `\n\`\`\`\n${inner().trim()}\n\`\`\`\n\n`;
+      case 'ul': case 'ol':   return `\n${inner()}\n`;
+      case 'li':  return `- ${inner().trim()}\n`;
+      case 'img': return `![${node.alt || ''}](${node.src || ''})`;
+      case 'sup': return `^(${inner()})`;
+      case 'sub': return `_(${inner()})`;
+      default:    return inner();
+    }
+  }
+  return walk(div).replace(/\n{3,}/g, '\n\n').trim();
+}
+       

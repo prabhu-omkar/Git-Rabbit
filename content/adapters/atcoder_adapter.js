@@ -308,3 +308,21 @@ function acHtmlToMd(el) {
     const inner = () => Array.from(n.childNodes).map(walk).join('');
     switch (tag) {
       case 'h1': return `\n# ${inner().trim()}\n\n`;
+      case 'h2': return `\n## ${inner().trim()}\n\n`;
+      case 'h3': return `\n### ${inner().trim()}\n\n`;
+      case 'p':  return `\n${inner().trim()}\n\n`;
+      case 'br': return '\n';
+      case 'strong': case 'b': return `**${inner()}**`;
+      case 'em': case 'i':    return `*${inner()}*`;
+      case 'code': return n.parentElement?.tagName === 'PRE' ? inner() : `\`${inner()}\``;
+      case 'pre':  return `\n\`\`\`\n${inner().trim()}\n\`\`\`\n\n`;
+      case 'ul': case 'ol': return `\n${inner()}\n`;
+      case 'li':  return `- ${inner().trim()}\n`;
+      case 'var': return `$${inner().trim()}$`;
+      case 'img': return `![${n.alt || ''}](${n.src || ''})`;
+      default:    return inner();
+    }
+  }
+  return walk(el).replace(/\n{3,}/g, '\n\n').trim();
+}
+            

@@ -238,3 +238,16 @@ function cfHtmlToMd(el) {
       case 'div':
         return n.classList.contains('section-title') ? `\n### ${inner().trim()}\n\n` : `\n${inner()}\n`;
       case 'p':  return `\n${inner().trim()}\n\n`;
+      case 'strong': case 'b': return `**${inner()}**`;
+      case 'em': case 'i':    return `*${inner()}*`;
+      case 'pre':  return `\n\`\`\`\n${inner().trim()}\n\`\`\`\n\n`;
+      case 'ul':   return `\n${inner()}\n`;
+      case 'li':   return `- ${inner().trim()}\n`;
+      case 'span':
+        return n.classList.contains('tex-span') ? ` $${inner().trim()}$ ` : inner();
+      default: return inner();
+    }
+  }
+  return walk(el).replace(/\n{3,}/g, '\n\n').trim();
+}
+         
