@@ -258,3 +258,59 @@ async function updateReadmeStatsAsync(client, branch, history) {
     await client.updateReadmeStats(branch, md);
   } catch {
     // Non-critical — don't let stats failure break the push
+  }
+}
+
+function buildStatsMarkdown(stats) {
+  const lines = [];
+  lines.push('## 📊 Solution Statistics', '');
+  lines.push(`> **${stats.total}** problems solved · Last synced: ${stats.lastPush ? stats.lastPush.slice(0, 10) : 'N/A'}`, '');
+
+  // Platform breakdown
+  if (Object.keys(stats.byPlatform).length) {
+    lines.push('### By Platform', '');
+    lines.push('| Platform | Count |');
+    lines.push('|:---------|------:|');
+    for (const [p, c] of Object.entries(stats.byPlatform).sort((a, b) => b[1] - a[1])) {
+      lines.push(`| ${p} | ${c} |`);
+    }
+    lines.push('');
+  }
+
+  // Difficulty breakdown
+  const lcDiffs = ['Easy', 'Medium', 'Hard'];
+  const lcEntries = lcDiffs.filter(d => stats.byDifficulty[d]);
+  if (lcEntries.length) {
+    lines.push('### By Difficulty (LeetCode)', '');
+    lines.push('| Difficulty | Count |');
+    lines.push('|:-----------|------:|');
+    for (const d of lcEntries) {
+      const emoji = d === 'Easy' ? '🟢' : d === 'Medium' ? '🟡' : '🔴';
+      lines.push(`| ${emoji} ${d} | ${stats.byDifficulty[d]} |`);
+    }
+    lines.push('');
+  }
+
+  // Language breakdown
+  if (Object.keys(stats.byLang).length) {
+    lines.push('### By Language', '');
+    lines.push('| Language | Count |');
+    lines.push('|:---------|------:|');
+    for (const [l, c] of Object.entries(stats.byLang).sort((a, b) => b[1] - a[1])) {
+      lines.push(`| ${l} | ${c} |`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
+/* ── Utilities ─────────────────────────────────────────────── */
+
+function sanitize(name) {
+  return (name || 'solution')
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+   
