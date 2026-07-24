@@ -103,3 +103,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const ri = parseRepo(repoInput.value);
     if (!patInput.value.trim() || !ri) return;
 
+    setBusy(saveBtn, saveBtnLabel, 'COMMITTING...', 'COMMIT', true);
+
+    try {
+      const res = await chrome.runtime.sendMessage({
+        action: 'SAVE_AND_INIT',
+        pat: patInput.value.trim(),
+        owner: ri.owner,
+        repo: ri.repo,
+        branch: branchInput.value.trim() || null,
+        pushReadme: pushReadme.checked
+      });
+
+      if (!res.success) {
+        showAlert(`ERR: ${res.error}`, 'err');
+        setStatus('err', 'ERR_INIT');
+        return;
+      }
+
+      let msg = `OK: ${res.owner}/${res.repo} [${res.branch}]`;
+      if (res.readme?.pushed) msg += ' (README_INIT)';
+      showAlert(msg, 'ok');
+      setStatus('ok', `[CONNECTED] ${res.owner}/${res.repo}`);
+    } catch (e) {
+      showAlert(`ERR: ${e.message}`, 'err');
+      setStatus('err', 'ERR_SYS');
+    } finally {
+      setBusy(saveBtn, saveBtnLabel, 'COMMITTING...', 'COMMIT', false);
+    }
+  });
+});
+        
